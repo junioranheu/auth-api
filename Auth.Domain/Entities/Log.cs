@@ -7,7 +7,7 @@ namespace Auth.Domain.Entities;
 public sealed class Log
 {
     [Key]
-    public int LogId { get; set; }
+    public Guid LogId { get; set; }
 
     public string? RequestType { get; set; } = string.Empty;
 
@@ -19,8 +19,8 @@ public sealed class Log
 
     public int Status { get; set; }
 
-    public int? UsuarioId { get; set; }
-    [ForeignKey(nameof(UsuarioId))]
+    public Guid? UserId { get; set; }
+    [ForeignKey(nameof(UserId))]
     public User? Users { get; init; }
 
     public DateTime Date { get; set; } = GerarHorarioBrasilia();

@@ -11,4 +11,13 @@
     <PackageReference Include="junioranheu-utils-package" Version="1.0.20" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Auth.Domain\Auth.Domain.csproj" />
+    <ProjectReference Include="..\Auth.Infrastructure\Auth.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UseCases\Logs\Shared\" />
+  </ItemGroup>
+
 </Project>

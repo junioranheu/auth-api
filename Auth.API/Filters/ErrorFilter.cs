@@ -1,60 +1,58 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Auth.API.Filters.Base;
+using Auth.Application.UseCases.Logs.Create;
+using Auth.Domain.Entities;
+using Auth.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.API.Filters;
 
-public sealed class ErrorFilter : ExceptionFilterAttribute
+public sealed class ErrorFilter(ILogger<ErrorFilter> logger, ICreateLog createLog) : ExceptionFilterAttribute
 {
-    private readonly ILogger _logger;
-    private readonly ICriarLogUseCase _criarLogUseCase;
-
-    public ErrorFilter(ILogger<ErrorFilter> logger, ICriarLogUseCase criarLogUseCase)
-    {
-        _logger = logger;
-        _criarLogUseCase = criarLogUseCase;
-    }
+    private readonly ILogger _logger = logger;
+    private readonly ICreateLog _createLog = createLog;
 
     public override async Task OnExceptionAsync(ExceptionContext context)
     {
         Exception ex = context.Exception;
-        string mensagemErroCompleta = $"Ocorreu um erro ao processar sua requisição. Data: {ObterDetalhesDataHora()}. Caminho: {context.HttpContext.Request.Path}. {(!string.IsNullOrEmpty(ex.InnerException?.Message) ? $"Mais informações: {ex.InnerException.Message}" : $"Mais informações: {ex.Message}")}";
-        string mensagemErroSimples = !string.IsNullOrEmpty(ex.InnerException?.Message) ? ex.InnerException.Message : ex.Message;
+        string error = $"Ocorreu um erro ao processar sua requisição. Data: {ObterDetalhesDataHora()}. Caminho: {context.HttpContext.Request.Path}. {(!string.IsNullOrEmpty(ex.InnerException?.Message) ? $"Mais informações: {ex.InnerException.Message}" : $"Mais informações: {ex.Message}")}";
+        string errorSimple = !string.IsNullOrEmpty(ex.InnerException?.Message) ? ex.InnerException.Message : ex.Message;
 
         var detalhes = new BadRequestObjectResult(new
         {
             Codigo = StatusCodes.Status500InternalServerError,
             Data = ObterDetalhesDataHora(),
             Caminho = context.HttpContext.Request.Path,
-            Mensagens = new string[] { mensagemErroSimples },
+            Mensagens = new string[] { errorSimple },
             IsErro = true
         });
 
-        int usuarioId = await new BaseFilter().BaseObterUsuarioId(context);
-        await CriarLog(context, mensagemErroCompleta, usuarioId);
-        ExibirILogger(ex, mensagemErroCompleta);
+        (UserRoleEnum[] _, Guid userId) = new BaseFilter().BaseGetUserId(context);
+        await CreateLog(context, error, userId);
+        Logger(ex, error);
 
         context.Result = detalhes;
         context.ExceptionHandled = true;
     }
 
-    private async Task CriarLog(ExceptionContext context, string mensagemErro, int? usuarioId)
+    private async Task CreateLog(ExceptionContext context, string error, Guid? userId)
     {
-        LogInput log = new()
+        Log log = new()
         {
-            TipoRequisicao = context.HttpContext.Request.Method ?? string.Empty,
+            RequestType = context.HttpContext.Request.Method ?? string.Empty,
             Endpoint = context.HttpContext.Request.Path.ToString() ?? string.Empty,
-            Parametros = string.Empty,
-            Descricao = mensagemErro,
-            StatusResposta = StatusCodes.Status500InternalServerError,
-            UsuarioId = usuarioId > 0 ? usuarioId : null
+            Parameters = string.Empty,
+            Description = error,
+            Status = StatusCodes.Status500InternalServerError,
+            UserId = userId is null || userId == Guid.Empty ? null : userId
         };
 
-        await _criarLogUseCase.Execute(log);
+        await _createLog.Execute(log);
     }
 
-    private void ExibirILogger(Exception ex, string mensagemErro)
+    private void Logger(Exception ex, string error)
     {
-        _logger.LogError(ex, "{mensagemErro}", mensagemErro);
+        _logger.LogError(ex, "{error}", error);
     }
 }

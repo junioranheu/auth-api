@@ -1,4 +1,5 @@
-﻿using Auth.Infrastructure.Auth.Models;
+﻿using Auth.Domain.Consts;
+using Auth.Infrastructure.Auth.Models;
 using Auth.Infrastructure.Auth.Token;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Factory;
@@ -100,7 +101,7 @@ public static class DependencyInjection
     {
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new() { Title = "Auth.API", Version = "v1" });
+            c.SwaggerDoc("v1", new() { Title = SystemConsts.Name, Version = "v1" });
 
             OpenApiSecurityScheme jwtSecurityScheme = new()
             {

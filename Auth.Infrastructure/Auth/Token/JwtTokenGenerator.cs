@@ -13,7 +13,7 @@ namespace Auth.Infrastructure.Auth.Token
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
-        public string GerarToken(string nomeCompleto, string email, IEnumerable<Claim>? listaClaims)
+        public string GerarToken(string name, string email, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -24,15 +24,15 @@ namespace Auth.Infrastructure.Auth.Token
 
             ClaimsIdentity claims;
 
-            if (listaClaims?.Count() > 0)
+            if (previousClaims?.Count() > 0)
             {
-                claims = new ClaimsIdentity(listaClaims);
+                claims = new ClaimsIdentity(previousClaims);
             }
             else
             {
                 claims = new(
                 [
-                    new Claim(type: ClaimTypes.Name, nomeCompleto ?? string.Empty),
+                    new Claim(type: ClaimTypes.Name, name ?? string.Empty),
                     new Claim(type: ClaimTypes.Email, email ?? string.Empty),
 
                     // Imitando o cenário do Azure, onde só tem e-mail e nome, e não role e ID;
@@ -41,34 +41,36 @@ namespace Auth.Infrastructure.Auth.Token
                 ]);
             }
 
-            DateTime horarioBrasiliaAjustado = HorarioBrasiliaAjustado();
+            DateTime date = GetDate();
+
             SecurityTokenDescriptor tokenDescriptor = new()
             {
                 Issuer = _jwtSettings.Issuer, // Emissor do token;
-                IssuedAt = horarioBrasiliaAjustado,
+                IssuedAt = date,
                 Audience = _jwtSettings.Audience,
-                NotBefore = horarioBrasiliaAjustado,
-                Expires = horarioBrasiliaAjustado.AddMinutes(_jwtSettings.TokenExpiryMinutes),
+                NotBefore = date,
+                Expires = date.AddMinutes(_jwtSettings.TokenExpiryMinutes),
                 Subject = claims,
                 SigningCredentials = signingCredentials
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwt = tokenHandler.WriteToken(token);
+
             return jwt;
         }
 
-        public string GerarRefreshToken()
+        public string GenerateRefreshToken()
         {
-            var numeroAleatorio = new byte[32];
+            var random = new byte[32];
             using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(numeroAleatorio);
-            var refreshToken = Convert.ToBase64String(numeroAleatorio);
+            rng.GetBytes(random);
+            var refreshToken = Convert.ToBase64String(random);
 
             return refreshToken;
         }
 
-        public ClaimsPrincipal? GetInfoTokenExpirado(string? token)
+        public ClaimsPrincipal? GetInfoTokenExpired(string? token)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -91,7 +93,7 @@ namespace Auth.Infrastructure.Auth.Token
             return principal;
         }
 
-        private static DateTime HorarioBrasiliaAjustado()
+        private static DateTime GetDate()
         {
             // Produção: +3 horas;
             DateTime horarioBrasiliaAjustado = GerarHorarioBrasilia().AddHours(+3);

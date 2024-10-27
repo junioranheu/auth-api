@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
+﻿using Auth.Domain.Consts;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Auth.API;
@@ -27,7 +28,7 @@ public static class DependencyAppConfiguration
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth.API");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", SystemConsts.Name);
                 // c.RoutePrefix = ""; // ***
                 c.DocExpansion(DocExpansion.None);
             });

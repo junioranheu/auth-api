@@ -8,9 +8,9 @@ namespace Auth.Domain.Entities;
 public sealed class UserRole
 {
     [Key]
-    public int UserRoleId { get; set; }
+    public Guid UserRoleId { get; set; }
 
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     [JsonIgnore]
     public User? Users { get; set; }
 

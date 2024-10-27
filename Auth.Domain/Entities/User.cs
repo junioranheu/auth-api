@@ -9,7 +9,7 @@ namespace Auth.Domain.Entities;
 public sealed class User
 {
     [Key]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [MaxLength(255)]
     public string FullName { get; set; } = string.Empty;

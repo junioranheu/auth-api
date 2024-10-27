@@ -1,4 +1,5 @@
 ﻿using Auth.Application.AutoMapper;
+using Auth.Application.UseCases.Logs;
 using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,7 +45,7 @@ public static class DependencyInjection
 
     private static void AddUseCases(IServiceCollection services)
     {
-
+        services.AddLogsApplication();
     }
 
     private static void AddServices(IServiceCollection services)
