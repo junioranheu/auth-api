@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="junioranheu-utils-package" Version="1.0.20" />
+  </ItemGroup>
+
 </Project>
