@@ -1,0 +1,19 @@
+﻿using Auth.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Auth.Infrastructure.Data;
+
+public class Context(DbContextOptions<Context> options) : DbContext(options)
+{
+    public DbSet<User> Users { get; set; }
+    public DbSet<UserRole> UsuariosRoles { get; set; }
+    public DbSet<Log> Logs { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+        {
+            relationship.DeleteBehavior = DeleteBehavior.Cascade;
+        }
+    }
+}
