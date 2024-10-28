@@ -17,16 +17,28 @@ namespace Auth.API.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public DateTime Get()
+        public ActionResult<DateTime> Get()
         {
-            return GerarHorarioBrasilia();
+            return Ok(GerarHorarioBrasilia());
         }
 
         [AuthorizeFilter(UserRoleEnum.Administrador)]
         [HttpGet("Authorized")]
-        public DateTime GetAuthorized()
+        public ActionResult<DateTime> GetAuthorized()
         {
             return GerarHorarioBrasilia();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Auth")]
+        public ActionResult<Guid> Auth()
+        {
+            if (IsAuth())
+            {
+                throw new Exception("Este usuário já está autenticado");
+            }
+
+            return Guid.NewGuid();
         }
     }
 }

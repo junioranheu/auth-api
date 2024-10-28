@@ -8,9 +8,19 @@ namespace Auth.API.Controllers;
 
 public abstract class BaseController<T> : Controller
 {
+    protected bool IsAuth()
+    {
+        if (User.Identity is null)
+        {
+            return false;
+        }
+
+        return User.Identity.IsAuthenticated;
+    }
+
     protected Guid? GetUserId()
     {
-        if (!User.Identity!.IsAuthenticated)
+        if (!IsAuth())
         {
             return Guid.Empty;
         }
@@ -29,7 +39,7 @@ public abstract class BaseController<T> : Controller
 
     protected string GetUserName()
     {
-        if (!User.Identity!.IsAuthenticated)
+        if (!IsAuth())
         {
             return string.Empty;
         }
@@ -40,7 +50,7 @@ public abstract class BaseController<T> : Controller
 
     protected string GetUserEmail()
     {
-        if (!User.Identity!.IsAuthenticated)
+        if (!IsAuth())
         {
             return string.Empty;
         }
@@ -51,7 +61,7 @@ public abstract class BaseController<T> : Controller
 
     protected (UserRoleEnum[] userRolesEnum, string[] userRolesStr) GetUserRoles()
     {
-        if (!User.Identity!.IsAuthenticated)
+        if (!IsAuth())
         {
             return ([], []);
         }
