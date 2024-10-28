@@ -2,7 +2,6 @@
 using Auth.Infrastructure.Auth.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -15,7 +14,7 @@ namespace Auth.Infrastructure.Auth.Token
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
-        public string GerarToken(Guid id, string name, string email, UserRoleEnum[] roles, IEnumerable<Claim>? previousClaims)
+        public string GerarToken(Guid userId, string name, string email, UserRoleEnum[] roles, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -32,9 +31,8 @@ namespace Auth.Infrastructure.Auth.Token
             }
             else
             {
-                claims = new(
-                [
-                    new Claim(type: ClaimTypes.NameIdentifier, id.ToString()),
+                claims = new([
+                    new Claim(type: ClaimTypes.NameIdentifier, userId.ToString()),
                     new Claim(type: ClaimTypes.Name, name),
                     new Claim(type: ClaimTypes.Email, email)
                 ]);
@@ -64,7 +62,7 @@ namespace Auth.Infrastructure.Auth.Token
             return jwt;
         }
 
-        public string GenerateRefreshToken()
+        public static string GenerateRefreshToken()
         {
             var random = new byte[32];
             using var rng = RandomNumberGenerator.Create();

@@ -34,7 +34,7 @@ public sealed class BaseFilter
                 string userId = user.FindFirst(ClaimTypes.NameIdentifier).Value;
                 string email = user.FindFirst(ClaimTypes.Email).Value;
 
-                string[] rolesStr = user.Find(ClaimTypes.Role).Value;
+                string[] rolesStr = user.FindAll(ClaimTypes.Role).Value;
                 List<UserRoleEnum> rolesList = [];
 
                 foreach (var item in rolesStr)
