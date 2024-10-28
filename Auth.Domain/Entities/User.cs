@@ -34,5 +34,5 @@ public sealed class User
 
     public DateTime Data { get; set; } = GerarHorarioBrasilia();
 
-    public IEnumerable<UserRole>? UsuarioRoles { get; init; }
+    public IEnumerable<UserRole>? UserRoles { get; init; }
 }

@@ -1,4 +1,4 @@
-﻿using Auth.Domain.Enums;
+﻿using Auth.Domain.Entities;
 using Auth.Infrastructure.Auth.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +14,7 @@ namespace Auth.Infrastructure.Auth.Token
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
-        public string GerarToken(Guid userId, string name, string email, UserRoleEnum[] roles, IEnumerable<Claim>? previousClaims)
+        public string GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -37,9 +37,12 @@ namespace Auth.Infrastructure.Auth.Token
                     new Claim(type: ClaimTypes.Email, email)
                 ]);
 
-                foreach (var role in roles)
+                if (roles?.Length > 0)
                 {
-                    claims.AddClaim(new Claim(ClaimTypes.Role, role.ToString()));
+                    foreach (var role in roles)
+                    {
+                        claims.AddClaim(new Claim(ClaimTypes.Role, role.Role.ToString()));
+                    }
                 }
             }
 
