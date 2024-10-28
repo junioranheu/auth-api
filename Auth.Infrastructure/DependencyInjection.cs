@@ -60,28 +60,6 @@ public static class DependencyInjection
              });
     }
 
-    private static void AddAuthAzure(IServiceCollection services, WebApplicationBuilder builder)
-    {
-        string clientId = builder.Configuration["AzureSettings:CliendId"] ?? string.Empty; // secrets.json
-        string authority = builder.Configuration["AzureSettings:Authority"] ?? string.Empty; // secrets.json
-
-        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(authority))
-        {
-            throw new Exception("O parâmetro clientId ou authority estão vazios");
-        }
-
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
-                 AddJwtBearer(x =>
-                 {
-                     x.Audience = clientId;
-                     x.Authority = $"https://login.microsoftonline.com/{authority}";
-                     x.TokenValidationParameters = new TokenValidationParameters
-                     {
-                         ValidateIssuer = false
-                     };
-                 });
-    }
-
     private static void AddFactory(IServiceCollection services)
     {
         services.AddSingleton<IConnectionFactory, ConnectionFactory>();

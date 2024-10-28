@@ -10,7 +10,7 @@ public class ConnectionFactory(IConfiguration configuration) : IConnectionFactor
 
     public string ObterStringConnection()
     {
-        string nomeConnectionString = _configuration["SystemSettings:ConnectionString"] ?? string.Empty;
+        string nomeConnectionString = _configuration["SystemSettings:ConnectionStringName"] ?? string.Empty;
         string connectionString = _configuration.GetConnectionString(nomeConnectionString) ?? string.Empty;
 
         return connectionString;
