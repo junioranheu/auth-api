@@ -21,14 +21,14 @@ public sealed class ErrorFilter(ILogger<ErrorFilter> logger, ICreateLog createLo
 
         var detalhes = new BadRequestObjectResult(new
         {
-            Codigo = StatusCodes.Status500InternalServerError,
-            Data = ObterDetalhesDataHora(),
-            Caminho = context.HttpContext.Request.Path,
-            Mensagens = new string[] { errorSimple },
-            IsErro = true
+            Code = StatusCodes.Status500InternalServerError,
+            Date = ObterDetalhesDataHora(),
+            context.HttpContext.Request.Path,
+            Messages = new string[] { errorSimple },
+            IsError = true
         });
 
-        (UserRoleEnum[] _, Guid userId) = new BaseFilter().BaseGetUserId(context);
+        (Guid? userId, string _, UserRoleEnum[] _) = new BaseFilter().GetUserInfo(context);
         await CreateLog(context, error, userId);
         Logger(ex, error);
 

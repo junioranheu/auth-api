@@ -1,6 +1,8 @@
-﻿using Auth.Infrastructure.Auth.Models;
+﻿using Auth.Domain.Enums;
+using Auth.Infrastructure.Auth.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -13,7 +15,7 @@ namespace Auth.Infrastructure.Auth.Token
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
-        public string GerarToken(string name, string email, IEnumerable<Claim>? previousClaims)
+        public string GerarToken(Guid id, string name, string email, UserRoleEnum[] roles, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -32,13 +34,15 @@ namespace Auth.Infrastructure.Auth.Token
             {
                 claims = new(
                 [
-                    new Claim(type: ClaimTypes.Name, name ?? string.Empty),
-                    new Claim(type: ClaimTypes.Email, email ?? string.Empty),
-
-                    // Imitando o cenário do Azure, onde só tem e-mail e nome, e não role e ID;
-                    // new Claim(type: ClaimTypes.Role, usuario.UsuarioTipoId.ToString()),
-                    // new Claim(type: ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString())
+                    new Claim(type: ClaimTypes.NameIdentifier, id.ToString()),
+                    new Claim(type: ClaimTypes.Name, name),
+                    new Claim(type: ClaimTypes.Email, email)
                 ]);
+
+                foreach (var role in roles)
+                {
+                    claims.AddClaim(new Claim(ClaimTypes.Role, role.ToString()));
+                }
             }
 
             DateTime date = GetDate();
