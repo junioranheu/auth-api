@@ -14,10 +14,13 @@ public sealed class User
     [MaxLength(255)]
     public string FullName { get; set; } = string.Empty;
 
+    [MaxLength(30)]
     public string UserName { get; set; } = string.Empty;
 
+    [MaxLength(255)]
     public string Email { get; set; } = string.Empty;
 
+    [MaxLength(30)]
     public string Password { get; set; } = string.Empty;
 
     public bool IsVerified { get; set; } = false;
@@ -32,7 +35,7 @@ public sealed class User
 
     public bool Status { get; set; } = true;
 
-    public DateTime Data { get; set; } = GerarHorarioBrasilia();
+    public DateTime Date { get; set; } = GerarHorarioBrasilia();
 
     public IEnumerable<UserRole>? UserRoles { get; init; }
 }

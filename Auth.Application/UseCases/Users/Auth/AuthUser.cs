@@ -7,24 +7,14 @@ using static junioranheu_utils_package.Fixtures.Encrypt;
 
 namespace Auth.Application.UseCases.Users.Auth;
 
-public sealed class AuthUser() : IAuthUser
+public sealed class AuthUser(
+    IMapper map,
+    IJwtTokenGenerator jwtTokenGenerator,
+    IGetUserByUserNameOrEmail getUserByUserNameOrEmail) : IAuthUser
 {
-    private readonly IMapper _map;
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
-    private readonly IGetUserByUserNameOrEmail _getUserByUserNameOrEmail;
-    private readonly ICriarRefreshTokenUseCase _criarRefreshTokenUseCase;
-
-    public AuthUser(
-        IMapper map,
-        IJwtTokenGenerator jwtTokenGenerator,
-        IGetUserByUserNameOrEmail getUserByUserNameOrEmail,
-        ICriarRefreshTokenUseCase criarRefreshTokenUseCase)
-    {
-        _map = map;
-        _jwtTokenGenerator = jwtTokenGenerator;
-        _getUserByUserNameOrEmail = getUserByUserNameOrEmail;
-        _criarRefreshTokenUseCase = criarRefreshTokenUseCase;
-    }
+    private readonly IMapper _map = map;
+    private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+    private readonly IGetUserByUserNameOrEmail _getUserByUserNameOrEmail = getUserByUserNameOrEmail;
 
     public async Task<UserOutput> Execute(string login, string password)
     {
@@ -43,11 +33,10 @@ public sealed class AuthUser() : IAuthUser
 
         if (!output.Status)
         {
-            throw new Exception("Usuáriod desativado");
+            throw new Exception("Usuário desativado");
         }
 
-        output.Token = _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray(), previousClaims: []);
-        output = await GerarRefreshToken(_jwtTokenGenerator, _criarRefreshTokenUseCase, output, output.UsuarioId);
+        (string token, string refreshToken) = await _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray(), previousClaims: []);
 
         return output;
     }

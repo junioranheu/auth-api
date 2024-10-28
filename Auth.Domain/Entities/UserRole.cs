@@ -16,5 +16,5 @@ public sealed class UserRole
 
     public UserRoleEnum Role { get; set; }
 
-    public DateTime Data { get; set; } = GerarHorarioBrasilia();
+    public DateTime Date { get; set; } = GerarHorarioBrasilia();
 }

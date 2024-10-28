@@ -1,5 +1,6 @@
 ﻿using Auth.Domain.Entities;
 using Auth.Infrastructure.Auth.Models;
+using Auth.Infrastructure.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,11 +11,12 @@ using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.Infrastructure.Auth.Token
 {
-    public class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions) : IJwtTokenGenerator
+    public class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions, Context context) : IJwtTokenGenerator
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
+        private readonly Context _context = context;
 
-        public string GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
+        public async Task<(string token, string refreshToken)> GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -23,34 +25,26 @@ namespace Auth.Infrastructure.Auth.Token
                 algorithm: SecurityAlgorithms.HmacSha256Signature
             );
 
-            ClaimsIdentity claims;
+            List<Claim> claimList = previousClaims?.ToList() ??
+            [
+                new(ClaimTypes.NameIdentifier, userId.ToString()),
+                new(ClaimTypes.Name, name),
+                new(ClaimTypes.Email, email)
+            ];
 
-            if (previousClaims?.Count() > 0)
+            if (roles is not null && roles.Length > 0)
             {
-                claims = new ClaimsIdentity(previousClaims);
+                IEnumerable<Claim> x = roles.Select(x => new Claim(ClaimTypes.Role, x.Role.ToString()));
+                claimList.AddRange(x);
             }
-            else
-            {
-                claims = new([
-                    new Claim(type: ClaimTypes.NameIdentifier, userId.ToString()),
-                    new Claim(type: ClaimTypes.Name, name),
-                    new Claim(type: ClaimTypes.Email, email)
-                ]);
 
-                if (roles?.Length > 0)
-                {
-                    foreach (var role in roles)
-                    {
-                        claims.AddClaim(new Claim(ClaimTypes.Role, role.Role.ToString()));
-                    }
-                }
-            }
+            ClaimsIdentity claims = new(claimList);
 
             DateTime date = GetDate();
 
             SecurityTokenDescriptor tokenDescriptor = new()
             {
-                Issuer = _jwtSettings.Issuer, // Emissor do token;
+                Issuer = _jwtSettings.Issuer,
                 IssuedAt = date,
                 Audience = _jwtSettings.Audience,
                 NotBefore = date,
@@ -59,13 +53,34 @@ namespace Auth.Infrastructure.Auth.Token
                 SigningCredentials = signingCredentials
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var jwt = tokenHandler.WriteToken(token);
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            string jwt = tokenHandler.WriteToken(token);
+            string refreshToken = await GenerateRefreshToken(userId);
 
-            return jwt;
+            return (jwt, refreshToken);
         }
 
-        public static string GenerateRefreshToken()
+        public async Task<string> GenerateRefreshToken(Guid userId)
+        {
+            string token = GenerateRefreshTokenStr();
+
+            RefreshToken refreshToken = new()
+            {
+                Token = token,
+                UserId = userId,
+                Created = GetDate(),
+                Expires = GetDate().AddMinutes(_jwtSettings.RefreshTokenExpiryMinutes),
+                Status = true
+            };
+
+            await _context.RefreshTokens.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return token;
+        }
+
+        #region extras
+        private static string GenerateRefreshTokenStr()
         {
             var random = new byte[32];
             using var rng = RandomNumberGenerator.Create();
@@ -75,40 +90,18 @@ namespace Auth.Infrastructure.Auth.Token
             return refreshToken;
         }
 
-        public ClaimsPrincipal? GetInfoTokenExpired(string? token)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret ?? string.Empty)),
-                ValidateLifetime = false
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            ClaimsPrincipal? principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new SecurityTokenException("Token inválido");
-            }
-
-            return principal;
-        }
-
         private static DateTime GetDate()
         {
-            // Produção: +3 horas;
-            DateTime horarioBrasiliaAjustado = GerarHorarioBrasilia().AddHours(+3);
+            // Prod: +3h;
+            DateTime date = GerarHorarioBrasilia().AddHours(3);
 
 #if DEBUG
-            // Dev: horário normal;
-            horarioBrasiliaAjustado = GerarHorarioBrasilia();
+            // Dev;
+            date = GerarHorarioBrasilia();
 #endif
 
-            return horarioBrasiliaAjustado;
+            return date;
         }
+        #endregion
     }
 }

@@ -5,7 +5,7 @@ namespace Auth.Infrastructure.Auth.Token
 {
     public interface IJwtTokenGenerator
     {
-        string GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims);
-        ClaimsPrincipal? GetInfoTokenExpired(string? token);
+        Task<string> GenerateRefreshToken(Guid userId);
+        Task<(string token, string refreshToken)> GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims);
     }
 }
