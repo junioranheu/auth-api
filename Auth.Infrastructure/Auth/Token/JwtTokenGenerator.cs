@@ -1,4 +1,5 @@
 ﻿using Auth.Domain.Entities;
+using Auth.Domain.Enums;
 using Auth.Infrastructure.Auth.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -31,8 +32,16 @@ namespace Auth.Infrastructure.Auth.Token
 
             if (roles is not null && roles.Length > 0)
             {
-                IEnumerable<Claim> x = roles.Select(x => new Claim(ClaimTypes.Role, x.Role.ToString()));
-                claimList.AddRange(x);
+                IEnumerable<Claim> rolesClaim = roles.Select(x => new Claim(ClaimTypes.Role, x.Role.ToString()));
+                claimList.AddRange(rolesClaim);
+
+                bool alreadyHasComum = roles.Any(x => x.Role == UserRoleEnum.Comum);
+
+                if (!alreadyHasComum)
+                {
+                    Claim roleComum = new(ClaimTypes.Role, UserRoleEnum.Comum.ToString());
+                    claimList.Add(roleComum);
+                }
             }
 
             ClaimsIdentity claims = new(claimList);

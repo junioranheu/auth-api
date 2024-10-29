@@ -13,7 +13,7 @@ namespace Auth.API.Controllers
         private readonly ICreateToken _createToken = createToken;
 
         [AllowAnonymous]
-        [HttpPost("Auth")]
+        [HttpPost]
         public async Task<ActionResult<UserOutput>> Auth(AuthInput input)
         {
             if (IsAuth())
