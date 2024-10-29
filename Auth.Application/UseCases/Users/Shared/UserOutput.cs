@@ -17,4 +17,7 @@ public sealed class UserOutput
     public bool Status { get; set; }
 
     public IEnumerable<UserRole>? UserRoles { get; init; }
+
+    // Extras;
+    public string Token { get; set; } = string.Empty;
 }

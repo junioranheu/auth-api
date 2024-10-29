@@ -37,7 +37,8 @@ public sealed class CreateToken(
             throw new Exception("Usuário desativado");
         }
 
-        _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray());
+        (string token, RefreshToken _) = _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray());
+        output.Token = token;
 
         return output;
     }
