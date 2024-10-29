@@ -1,4 +1,5 @@
 ﻿using Auth.Application.AutoMapper;
+using Auth.Application.UseCases.Auth;
 using Auth.Application.UseCases.Logs;
 using Auth.Application.UseCases.Users;
 using AutoMapper;
@@ -47,7 +48,8 @@ public static class DependencyInjection
     private static void AddUseCases(IServiceCollection services)
     {
         services.AddLogsApplication();
-        services.AddUsersApplication();     
+        services.AddUsersApplication();
+        services.AddAuthApplication();
     }
 
     private static void AddServices(IServiceCollection services)

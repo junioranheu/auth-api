@@ -1,6 +1,5 @@
 ﻿using Auth.Domain.Entities;
 using Auth.Infrastructure.Auth.Models;
-using Auth.Infrastructure.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,12 +10,11 @@ using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.Infrastructure.Auth.Token
 {
-    public class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions, Context context) : IJwtTokenGenerator
+    public sealed class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions) : IJwtTokenGenerator
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
-        private readonly Context _context = context;
 
-        public async Task<(string token, string refreshToken)> GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
+        public (string token, RefreshToken refreshToken) GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -55,12 +53,12 @@ namespace Auth.Infrastructure.Auth.Token
 
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
             string jwt = tokenHandler.WriteToken(token);
-            string refreshToken = await GenerateRefreshToken(userId);
+            RefreshToken refreshToken = GenerateRefreshToken(userId);
 
             return (jwt, refreshToken);
         }
 
-        public async Task<string> GenerateRefreshToken(Guid userId)
+        public RefreshToken GenerateRefreshToken(Guid userId)
         {
             string token = GenerateRefreshTokenStr();
 
@@ -73,10 +71,7 @@ namespace Auth.Infrastructure.Auth.Token
                 Status = true
             };
 
-            await _context.RefreshTokens.AddAsync(refreshToken);
-            await _context.SaveChangesAsync();
-
-            return token;
+            return refreshToken;
         }
 
         #region extras

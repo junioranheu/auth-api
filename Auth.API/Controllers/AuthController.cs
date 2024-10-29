@@ -16,16 +16,21 @@ namespace Auth.API.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet]
+        [HttpGet("Get")]
         public ActionResult<DateTime> Get()
         {
             return Ok(GerarHorarioBrasilia());
         }
 
         [AuthorizeFilter(UserRoleEnum.Administrador)]
-        [HttpGet("Authorized")]
-        public ActionResult<DateTime> GetAuthorized()
+        [HttpGet("GetAuth")]
+        public ActionResult<DateTime> GetAuth()
         {
+            if (!IsAuth())
+            {
+                throw new Exception("É necessário estar autenticado para acessar esse end-point");
+            }
+
             return GerarHorarioBrasilia();
         }
 

@@ -5,12 +5,12 @@ using Auth.Infrastructure.Auth.Token;
 using AutoMapper;
 using static junioranheu_utils_package.Fixtures.Encrypt;
 
-namespace Auth.Application.UseCases.Users.Auth;
+namespace Auth.Application.UseCases.Auth.CreateTokenJWT;
 
-public sealed class AuthUser(
+public sealed class CreateToken(
     IMapper map,
     IJwtTokenGenerator jwtTokenGenerator,
-    IGetUserByUserNameOrEmail getUserByUserNameOrEmail) : IAuthUser
+    IGetUserByUserNameOrEmail getUserByUserNameOrEmail) : ICreateToken
 {
     private readonly IMapper _map = map;
     private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
@@ -36,7 +36,7 @@ public sealed class AuthUser(
             throw new Exception("Usuário desativado");
         }
 
-        (string token, string refreshToken) = await _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray(), previousClaims: []);
+        (string token, RefreshToken refreshToken) = _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray(), previousClaims: []);
 
         return output;
     }
