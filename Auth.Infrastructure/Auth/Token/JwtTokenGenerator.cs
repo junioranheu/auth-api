@@ -66,7 +66,6 @@ namespace Auth.Infrastructure.Auth.Token
             return (jwt, refreshToken);
         }
 
-
         #region extras
         private RefreshToken GenerateRefreshToken(Guid userId)
         {

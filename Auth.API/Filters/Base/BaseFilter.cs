@@ -29,12 +29,17 @@ public sealed class BaseFilter
         {
             if (context.HttpContext.User.Identity!.IsAuthenticated)
             {
-                var user = context.HttpContext.User; 
+                ClaimsPrincipal? user = (ClaimsPrincipal)context.HttpContext.User;
 
-                string userId = user.FindFirst(ClaimTypes.NameIdentifier).Value;
-                string email = user.FindFirst(ClaimTypes.Email).Value;
+                if (user is null)
+                {
+                    return (null, string.Empty, []);
+                }
 
-                string[] rolesStr = user.FindAll(ClaimTypes.Role).Value;
+                string userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+                string email = user?.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
+                string[] rolesStr = user?.FindAll(ClaimTypes.Role)?.Select(claim => claim.Value).ToArray() ?? [];
+
                 List<UserRoleEnum> rolesList = [];
 
                 foreach (var item in rolesStr)
