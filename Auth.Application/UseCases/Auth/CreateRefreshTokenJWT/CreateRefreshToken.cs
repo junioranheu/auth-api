@@ -12,7 +12,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
     private readonly Context _context = context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
 
-    public async Task<(string token, string refreshToken)> Execute(Guid userId)
+    public async Task<(string newJwtToken, string newRefreshToken)> RefreshToken(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -31,7 +31,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
         }
 
         // Gere novo JWT e refresh token;
-        (string newJwtToken, RefreshToken newRefreshToken) = _jwtTokenGenerator.GenerateToken(userId: userId, name: "xd", email: "xd", roles: [], previousClaims: []);
+        (string newJwtToken, RefreshToken newRefreshToken) = _jwtTokenGenerator.GenerateToken(userId: userId, name: "xd", email: "xd", roles: []);
 
         // Revogue o antigo refresh token e salve o novo no banco;
         await Update(oldRefreshTokens);

@@ -1,5 +1,4 @@
 ﻿using Auth.Application.UseCases.Auth.CreateRefreshTokenJWT;
-using Auth.Domain.Entities;
 using Auth.Infrastructure.Auth.Token;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -13,7 +12,7 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var token = context.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        string token = context.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
 
         if (!string.IsNullOrEmpty(token))
         {
@@ -21,14 +20,13 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
 
             if (_jwtTokenGenerator.IsTokenExpiringSoon(jwtToken))
             {
-                Guid userId = Guid.NewGuid();
-
-                RefreshToken newToken = _jwtTokenGenerator.GenerateRefreshToken(userId); // CHAMAR A NOVA PARADA DO CreateRefreshToken;
-                context.Response.Headers.Authorization = "Bearer " + newToken.Token;
+                Guid userId = Guid.NewGuid(); // TO DO: OBTER O USUÁRIO!!!!!!!!!!!
+                (string newJwtToken, string newRefreshToken) = await _createRefreshToken.RefreshToken(userId);
 
                 // Update context;
-                context.Items["JwtToken"] = newToken.Token;
-                context.Items["RefreshToken"] = newToken.Token;
+                context.Response.Headers.Authorization = "Bearer " + newJwtToken;
+                context.Items["JwtToken"] = newJwtToken;
+                context.Items["RefreshToken"] = newRefreshToken;
             }
         }
 

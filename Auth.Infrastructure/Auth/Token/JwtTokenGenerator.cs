@@ -14,7 +14,7 @@ namespace Auth.Infrastructure.Auth.Token
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
-        public (string token, RefreshToken refreshToken) GenerateToken(Guid userId, string name, string email, UserRole[]? roles, IEnumerable<Claim>? previousClaims)
+        public (string token, RefreshToken refreshToken) GenerateToken(Guid userId, string name, string email, UserRole[]? roles)
         {
             JwtSecurityTokenHandler tokenHandler = new();
 
@@ -23,8 +23,7 @@ namespace Auth.Infrastructure.Auth.Token
                 algorithm: SecurityAlgorithms.HmacSha256Signature
             );
 
-            List<Claim> claimList = previousClaims?.ToList() ??
-            [
+            List<Claim> claimList = [
                 new(ClaimTypes.NameIdentifier, userId.ToString()),
                 new(ClaimTypes.Name, name),
                 new(ClaimTypes.Email, email)
@@ -58,6 +57,8 @@ namespace Auth.Infrastructure.Auth.Token
             return (jwt, refreshToken);
         }
 
+
+        #region extras
         private RefreshToken GenerateRefreshToken(Guid userId)
         {
             string token = GenerateRefreshTokenStr();
@@ -74,7 +75,6 @@ namespace Auth.Infrastructure.Auth.Token
             return refreshToken;
         }
 
-        #region extras
         private static string GenerateRefreshTokenStr()
         {
             var random = new byte[32];

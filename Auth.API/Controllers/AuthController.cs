@@ -1,6 +1,7 @@
 ﻿using Auth.API.Filters;
 using Auth.Application.UseCases.Auth.CreateTokenJWT;
 using Auth.Application.UseCases.Auth.Shared;
+using Auth.Application.UseCases.Users.Shared;
 using Auth.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,16 +36,15 @@ namespace Auth.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("Auth")]
-        public async Task<ActionResult<Guid>> Auth(AuthInput input)
+        public async Task<ActionResult<UserOutput>> Auth(AuthInput input)
         {
             if (IsAuth())
             {
                 throw new Exception("Este usuário já está autenticado");
             }
 
-            await _createToken.Execute(input);
-
-            return Guid.NewGuid();
+            UserOutput output = await _createToken.Execute(input);
+            return output;
         }
     }
 }
