@@ -14,6 +14,7 @@ namespace Auth.Infrastructure.Auth.Token
     public sealed class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions) : IJwtTokenGenerator
     {
         private readonly JwtSettings _jwtSettings = jwtOptions.Value;
+        private const int thresholdTimeZoneInHours = 3;
 
         public (string token, RefreshToken refreshToken) GenerateToken(Guid userId, string name, string email, UserRole[]? roles)
         {
@@ -93,9 +94,9 @@ namespace Auth.Infrastructure.Auth.Token
             return refreshToken;
         }
 
-        public bool IsTokenExpiringSoon(JwtSecurityToken token, int thresholdInMinutes = 5)
+        public bool IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 2)
         {
-            DateTime date = GetDate();
+            DateTime date = GetDate().AddHours(thresholdTimeZoneInHours); // A data de validade do Token é ToUniversalTime, portanto deliberadamente deve ser adicionado tempo aqui, sempre;
             DateTime dateThreshold = date.AddMinutes(thresholdInMinutes);
             bool isTokenExpiringSoon = token.ValidTo < dateThreshold;
 
@@ -105,7 +106,7 @@ namespace Auth.Infrastructure.Auth.Token
         private static DateTime GetDate()
         {
             // Prod: +3h;
-            DateTime date = GerarHorarioBrasilia().AddHours(3);
+            DateTime date = GerarHorarioBrasilia().AddHours(thresholdTimeZoneInHours);
 
 #if DEBUG
             // Dev;

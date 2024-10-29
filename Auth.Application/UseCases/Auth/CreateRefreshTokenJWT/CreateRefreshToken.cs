@@ -16,7 +16,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
     {
         if (userId == Guid.Empty)
         {
-            throw new Exception("Usuário não encontrado");
+            throw new Exception($"Parâmetro {nameof(userId)} está vazio em {nameof(RefreshToken)}");
         }
 
         var oldRefreshTokens = await _context.RefreshTokens.
@@ -30,8 +30,10 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
             throw new SecurityTokenException("Refresh token inválido ou expirado");
         }
 
+        (User user, UserRole[] userRoles) = await GetUser(userId);
+
         // Gere novo JWT e refresh token;
-        (string newJwtToken, RefreshToken newRefreshToken) = _jwtTokenGenerator.GenerateToken(userId: userId, name: "xd", email: "xd", roles: []);
+        (string newJwtToken, RefreshToken newRefreshToken) = _jwtTokenGenerator.GenerateToken(userId: user.UserId, name: user.FullName, email: user.Email, roles: userRoles);
 
         // Revogue o antigo refresh token e salve o novo no banco;
         await Update(oldRefreshTokens);
@@ -54,5 +56,28 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
             x.SetProperty(prop => prop.Status, false).
             SetProperty(prop => prop.Revoked, GerarHorarioBrasilia())
         );
+    }
+
+    private async Task<(User user, UserRole[] userRoles)> GetUser(Guid userId)
+    {
+        User? user = await _context.Users.
+                     Include(x => x.UserRoles).
+                     AsNoTracking().
+                     Where(x => x.UserId == userId).
+                     FirstOrDefaultAsync();
+
+        if (user is null)
+        {
+            throw new Exception($"Usuário {userId} não encontrado");
+        }
+
+        if (!user.Status)
+        {
+            throw new Exception($"O usuário {user.UserName} ({userId}) está desativado");
+        }
+
+        UserRole[] userRoles = user.UserRoles?.ToArray() ?? [];
+
+        return (user, userRoles);
     }
 }

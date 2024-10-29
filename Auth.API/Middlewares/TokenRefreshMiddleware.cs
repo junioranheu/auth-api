@@ -1,6 +1,7 @@
 ﻿using Auth.Application.UseCases.Auth.CreateRefreshTokenJWT;
 using Auth.Infrastructure.Auth.Token;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Auth.API.Middlewares;
 
@@ -24,9 +25,16 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
         {
             JwtSecurityToken jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-            if (_jwtTokenGenerator.IsTokenExpiringSoon(jwtToken))
+            if (_jwtTokenGenerator.IsTokenExpiringSoonOrHasAlreadyExpired(jwtToken))
             {
-                Guid userId = Guid.NewGuid(); // TO DO: OBTER O USUÁRIO!!!!!!!!!!!
+                string userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value ?? string.Empty;
+
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    throw new InvalidOperationException("Falha ao gerar novo Token. O parâmetro userIdClaim é inválido");
+                }
+
+                Guid userId = Guid.Parse(userIdClaim);
 
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 ICreateRefreshToken createRefreshToken = scope.ServiceProvider.GetRequiredService<ICreateRefreshToken>();
