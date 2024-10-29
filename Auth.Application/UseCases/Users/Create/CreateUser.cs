@@ -2,6 +2,7 @@
 using Auth.Domain.Entities;
 using Auth.Infrastructure.Data;
 using AutoMapper;
+using static junioranheu_utils_package.Fixtures.Encrypt;
 using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.Application.UseCases.Users.Create;
@@ -29,8 +30,8 @@ public sealed class CreateUser(Context context, IMapper map) : ICreateUser
         {
             FullName = input.FullName,
             UserName = input.UserName,
-            Email = input.FullName,
-            Password = input.FullName,
+            Email = input.Email,
+            Password = Criptografar(input.Password),
             IsVerified = false,
             VerificationCode = GerarStringAleatoria(17, false),
             VerificationCodeValidity = date.AddDays(7),

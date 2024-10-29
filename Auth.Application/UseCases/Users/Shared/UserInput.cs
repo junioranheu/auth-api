@@ -10,5 +10,7 @@ public sealed class UserInput
 
     public string Email { get; set; } = string.Empty;
 
+    public string Password { get; set; } = string.Empty;
+
     public UserRoleEnum UserRole { get; set; }
 }
