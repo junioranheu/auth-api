@@ -1,4 +1,5 @@
-﻿using Auth.Application.UseCases.Users.GetByUserNameOrEmail;
+﻿using Auth.Application.UseCases.Auth.Shared;
+using Auth.Application.UseCases.Users.GetByUserNameOrEmail;
 using Auth.Application.UseCases.Users.Shared;
 using Auth.Domain.Entities;
 using Auth.Infrastructure.Auth.Token;
@@ -16,9 +17,9 @@ public sealed class CreateToken(
     private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
     private readonly IGetUserByUserNameOrEmail _getUserByUserNameOrEmail = getUserByUserNameOrEmail;
 
-    public async Task<UserOutput> Execute(string login, string password)
+    public async Task<UserOutput> Execute(AuthInput input)
     {
-        (User? user, string passwordEncrypted) = await _getUserByUserNameOrEmail.Execute(login);
+        (User? user, string passwordEncrypted) = await _getUserByUserNameOrEmail.Execute(input.Login);
         UserOutput? output = _map.Map<UserOutput>(user);
 
         if (output is null)
@@ -26,7 +27,7 @@ public sealed class CreateToken(
             throw new Exception("Usuário não encontrado");
         }
 
-        if (!VerificarCriptografia(senha: password, senhaCriptografada: passwordEncrypted))
+        if (!VerificarCriptografia(senha: input.Password, senhaCriptografada: passwordEncrypted))
         {
             throw new Exception("Nome de usuário ou senha incorretos");
         }
