@@ -17,7 +17,7 @@ public sealed class User
     [MaxLength(30)]
     public string UserName { get; set; } = string.Empty;
 
-    [MaxLength(255)]
+    [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
 
     [MaxLength(30)]

@@ -13,7 +13,7 @@ namespace Auth.API.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult<UserOutput>> Create(UserInput input)
+        public async Task<ActionResult<UserOutput>> Create([FromForm] UserInput input)
         {
             UserOutput output = await _create.Execute(input);
             return output;
