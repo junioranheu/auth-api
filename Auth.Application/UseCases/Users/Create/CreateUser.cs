@@ -1,6 +1,5 @@
 ﻿using Auth.Application.UseCases.Users.Shared;
 using Auth.Domain.Entities;
-using Auth.Domain.Enums;
 using Auth.Infrastructure.Data;
 using AutoMapper;
 using static junioranheu_utils_package.Fixtures.Get;
@@ -15,7 +14,7 @@ public sealed class CreateUser(Context context, IMapper map) : ICreateUser
     public async Task<UserOutput> Execute(UserInput input)
     {
         User user = await SaveUser(input);
-        await SaveUserRole(user.UserId);
+        await SaveUserRole(input, user.UserId);
 
         UserOutput? output = _map.Map<UserOutput>(user);
 
@@ -47,12 +46,12 @@ public sealed class CreateUser(Context context, IMapper map) : ICreateUser
         return user;
     }
 
-    private async Task SaveUserRole(Guid userId)
+    private async Task SaveUserRole(UserInput input, Guid userId)
     {
         UserRole userRole = new()
         {
             UserId = userId,
-            Role = UserRoleEnum.Administrador,
+            Role = input.UserRole,
             Date = GerarHorarioBrasilia()
         };
 

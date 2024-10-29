@@ -17,7 +17,7 @@ namespace Auth.API.Controllers
             return Ok(GerarHorarioBrasilia());
         }
 
-        [AuthorizeFilter(UserRoleEnum.Administrador)]
+        [AuthorizeFilter(UserRoleEnum.Administrador, UserRoleEnum.Suporte)]
         [HttpGet("GetAuth")]
         public ActionResult<DateTime> GetAuth()
         {

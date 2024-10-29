@@ -1,4 +1,6 @@
-﻿namespace Auth.Application.UseCases.Users.Shared;
+﻿using Auth.Domain.Enums;
+
+namespace Auth.Application.UseCases.Users.Shared;
 
 public sealed class UserInput
 {
@@ -7,4 +9,6 @@ public sealed class UserInput
     public string UserName { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
+
+    public UserRoleEnum UserRole { get; set; }
 }
