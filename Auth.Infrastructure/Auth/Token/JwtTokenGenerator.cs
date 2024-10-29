@@ -58,7 +58,7 @@ namespace Auth.Infrastructure.Auth.Token
             return (jwt, refreshToken);
         }
 
-        public RefreshToken GenerateRefreshToken(Guid userId)
+        private RefreshToken GenerateRefreshToken(Guid userId)
         {
             string token = GenerateRefreshTokenStr();
 
@@ -83,6 +83,15 @@ namespace Auth.Infrastructure.Auth.Token
             var refreshToken = Convert.ToBase64String(random);
 
             return refreshToken;
+        }
+
+        public bool IsTokenExpiringSoon(JwtSecurityToken token, int thresholdInMinutes = 5)
+        {
+            DateTime date = GetDate();
+            DateTime dateThreshold = date.AddMinutes(thresholdInMinutes);
+            bool isTokenExpiringSoon = token.ValidTo < dateThreshold;
+
+            return isTokenExpiringSoon;
         }
 
         private static DateTime GetDate()

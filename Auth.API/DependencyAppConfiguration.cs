@@ -1,4 +1,5 @@
-﻿using Auth.Domain.Consts;
+﻿using Auth.API.Middlewares;
+using Auth.Domain.Consts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -11,6 +12,7 @@ public static class DependencyAppConfiguration
         using IServiceScope scope = app.Services.CreateScope();
         IServiceProvider services = scope.ServiceProvider;
 
+        AddMiddleware(app);
         AddSwagger(app);
         AddHttpsRedirection(app);
         AddCors(app, builder);
@@ -19,6 +21,11 @@ public static class DependencyAppConfiguration
         AddMisc(app);
 
         return app;
+    }
+
+    private static void AddMiddleware(WebApplication app)
+    {
+        app.UseMiddleware<TokenRefreshMiddleware>();
     }
 
     private static void AddSwagger(WebApplication app)
