@@ -19,17 +19,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
             throw new Exception($"Parâmetro {nameof(userId)} está vazio em {nameof(RefreshToken)}");
         }
 
-        var oldRefreshTokens = await _context.RefreshTokens.
-                               AsNoTracking().
-                               Where(x => x.UserId == userId && x.Status == true).
-                               OrderByDescending(x => x.Created).
-                               ToListAsync();
-
-        if (oldRefreshTokens is null || oldRefreshTokens.Count == 0)
-        {
-            throw new SecurityTokenException("Refresh token inválido ou expirado");
-        }
-
+        List<RefreshToken> oldRefreshTokens = await GetOldRefreshTokens(userId);
         (User user, UserRole[] userRoles) = await GetUser(userId);
 
         // Gere novo JWT e refresh token;
@@ -50,12 +40,39 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
 
     public async Task Update(List<RefreshToken> oldRefreshTokens)
     {
+        if (oldRefreshTokens.Count == 0)
+        {
+            return;
+        }
+
+        List<Guid> oldRefreshTokenIds = oldRefreshTokens.Select(y => y.RefreshTokenId).ToList();
+
         await _context.RefreshTokens.
-            Where(x => oldRefreshTokens.Any(y => y.RefreshTokenId == x.RefreshTokenId)).
-            ExecuteUpdateAsync(x =>
-            x.SetProperty(prop => prop.Status, false).
+        Where(x => oldRefreshTokenIds.Contains(x.RefreshTokenId)).
+        ExecuteUpdateAsync(x => x.
+            SetProperty(prop => prop.Status, false).
             SetProperty(prop => prop.Revoked, GerarHorarioBrasilia())
         );
+    }
+
+    #region extras
+    private async Task<List<RefreshToken>> GetOldRefreshTokens(Guid userId)
+    {
+        List<RefreshToken> oldRefreshTokens = await _context.RefreshTokens.
+                                              AsNoTracking().
+                                              Where(x =>
+                                                 x.UserId == userId &&
+                                                 x.Status == true
+                                              ).
+                                              OrderByDescending(x => x.Created).
+                                              ToListAsync();
+
+        if (oldRefreshTokens is null || oldRefreshTokens.Count == 0)
+        {
+            throw new SecurityTokenException("Refresh token inválido ou expirado");
+        }
+
+        return oldRefreshTokens;
     }
 
     private async Task<(User user, UserRole[] userRoles)> GetUser(Guid userId)
@@ -80,4 +97,5 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
 
         return (user, userRoles);
     }
+    #endregion
 }

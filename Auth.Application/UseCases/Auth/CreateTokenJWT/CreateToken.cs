@@ -1,4 +1,5 @@
-﻿using Auth.Application.UseCases.Auth.Shared;
+﻿using Auth.Application.UseCases.Auth.CreateRefreshTokenJWT;
+using Auth.Application.UseCases.Auth.Shared;
 using Auth.Application.UseCases.Users.GetByUserNameOrEmail;
 using Auth.Application.UseCases.Users.Shared;
 using Auth.Domain.Entities;
@@ -11,10 +12,12 @@ namespace Auth.Application.UseCases.Auth.CreateTokenJWT;
 public sealed class CreateToken(
     IMapper map,
     IJwtTokenGenerator jwtTokenGenerator,
+    ICreateRefreshToken createRefreshToken,
     IGetUserByUserNameOrEmail getUserByUserNameOrEmail) : ICreateToken
 {
     private readonly IMapper _map = map;
     private readonly IJwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+    private readonly ICreateRefreshToken _createRefreshToken = createRefreshToken;
     private readonly IGetUserByUserNameOrEmail _getUserByUserNameOrEmail = getUserByUserNameOrEmail;
 
     public async Task<UserOutput> Execute(AuthInput input)
@@ -37,8 +40,13 @@ public sealed class CreateToken(
             throw new Exception("Usuário desativado");
         }
 
-        (string token, RefreshToken _) = _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray());
+        (string token, RefreshToken refreshToken) = _jwtTokenGenerator.GenerateToken(userId: output.UserId, name: output.FullName, email: output.Email, roles: output.UserRoles?.ToArray());
+
+        // Atualizar token no output;
         output.Token = token;
+
+        // Salvar o refresh token no banco;
+        await _createRefreshToken.Save(refreshToken);
 
         return output;
     }
