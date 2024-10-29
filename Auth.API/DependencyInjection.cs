@@ -1,6 +1,7 @@
 ﻿using Auth.API.Filters;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Options;
 using System.IO.Compression;
 using System.Text.Json.Serialization;
 
@@ -56,6 +57,7 @@ public static class DependencyInjection
             {
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 x.JsonSerializerOptions.WriteIndented = true;
+                x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
     }
 

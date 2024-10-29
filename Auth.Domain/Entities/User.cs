@@ -20,7 +20,6 @@ public sealed class User
     [MaxLength(150)]
     public string Email { get; set; } = string.Empty;
 
-    [MaxLength(30)]
     public string Password { get; set; } = string.Empty;
 
     public bool IsVerified { get; set; } = false;
