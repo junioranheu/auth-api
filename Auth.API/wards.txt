@@ -4,3 +4,5 @@ Implementar e validar refresh token "manual" deployado na Azure
 Implementar autorização com a Azure
 Implementar refresh token com a Azure e validar em localhost
 Implementar refresh token com a Azure e validar deployado na Azure
+
+Refactor READ.ME
