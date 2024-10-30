@@ -1,0 +1,3 @@
+Implementar e validar 100% o refresh token "manual"
+Implementar autorização com a Azure
+Implementar refresh token com a Azure

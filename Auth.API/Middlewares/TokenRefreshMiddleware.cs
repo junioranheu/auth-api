@@ -42,8 +42,9 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
 
                 string newJwtToken = await createRefreshToken.RefreshToken(userId);
 
-                // Atualizar contexto;
+                // Atualizar contextos;
                 context.Response.Headers.Authorization = $"Bearer {newJwtToken}";
+                context.Request.Headers.Authorization = $"Bearer {newJwtToken}";
             }
         }
 
