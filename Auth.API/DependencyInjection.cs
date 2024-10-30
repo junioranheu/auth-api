@@ -56,8 +56,13 @@ public static class DependencyInjection
             AddJsonOptions(x =>
             {
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-                x.JsonSerializerOptions.WriteIndented = true;
                 x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+#if DEBUG
+                x.JsonSerializerOptions.WriteIndented = true;
+#else
+                x.JsonSerializerOptions.WriteIndented = false;
+#endif
             });
     }
 
