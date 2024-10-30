@@ -32,7 +32,7 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
 
                 if (string.IsNullOrEmpty(userIdClaim))
                 {
-                    throw new InvalidOperationException("Falha ao gerar novo Token. O parâmetro userIdClaim é inválido");
+                    throw new InvalidOperationException($"Falha ao gerar novo Token. O parâmetro userIdClaim ({userIdClaim}) está inválido");
                 }
 
                 Guid userId = Guid.Parse(userIdClaim);

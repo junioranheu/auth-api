@@ -96,7 +96,7 @@ namespace Auth.Infrastructure.Auth.Token
 
         public (bool isTokenExpiringSoonOrHasAlreadyExpired, double differenceInMinutes) IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 0)
         {
-            DateTime date = GetDate().AddHours(thresholdTimeZoneInHours); // A data de validade do Token é ToUniversalTime, portanto deliberadamente deve ser adicionado tempo aqui, sempre;
+            DateTime date = GetDate().AddHours(thresholdTimeZoneInHours); // A data de validade do Token é ToUniversalTime, portanto deliberadamente deve ser adicionado tempo extra aqui, sempre;
             DateTime dateThreshold = date.AddMinutes(thresholdInMinutes);
 
             double differenceInMinutes = (token.ValidTo - dateThreshold).TotalMinutes;
