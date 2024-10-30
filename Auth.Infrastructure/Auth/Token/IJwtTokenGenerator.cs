@@ -6,5 +6,5 @@ namespace Auth.Infrastructure.Auth.Token;
 public interface IJwtTokenGenerator
 {
     (string token, RefreshToken refreshToken) GenerateToken(Guid userId, string name, string email, UserRole[]? roles);
-    bool IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 5);
+    (bool isTokenExpiringSoon, double differenceInMinutes) IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 0);
 }

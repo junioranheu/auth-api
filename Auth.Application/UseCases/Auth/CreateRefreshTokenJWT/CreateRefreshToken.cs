@@ -19,15 +19,14 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
             throw new Exception($"Parâmetro {nameof(userId)} está vazio em {nameof(RefreshToken)}");
         }
 
-        List<RefreshToken> oldRefreshTokens = await GetOldRefreshTokens(userId);
+        List<RefreshToken> invalidRefreshTokens = await GetOldRefreshTokens(userId);
         (User user, UserRole[] userRoles) = await GetUser(userId);
 
         // Gere novo JWT e refresh token;
         (string newJwtToken, RefreshToken newRefreshToken) = _jwtTokenGenerator.GenerateToken(userId: user.UserId, name: user.FullName, email: user.Email, roles: userRoles);
 
-        // Revogue o antigo refresh token e salve o novo no banco;
-        await Update(oldRefreshTokens);
-        await Save(newRefreshToken);
+        // Revogue os antigos refresh tokens inválidos;
+        await Update(invalidRefreshTokens);
 
         return (newJwtToken, newRefreshToken.Token);
     }
@@ -67,12 +66,16 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
                                               OrderByDescending(x => x.Created).
                                               ToListAsync();
 
-        if (oldRefreshTokens is null || oldRefreshTokens.Count == 0)
+        DateTime date = GerarHorarioBrasilia();
+        List<RefreshToken> validRefreshTokens = oldRefreshTokens.Where(x => x.Expires > date).ToList();
+        List<RefreshToken> invalidRefreshTokens = oldRefreshTokens.Where(x => x.Expires <= date).ToList();
+
+        if (validRefreshTokens is null || validRefreshTokens.Count == 0)
         {
-            throw new SecurityTokenException("Refresh token inválido ou expirado");
+            throw new SecurityTokenException("Não há nenhum refresh token válido. No momento todos estão inválidos ou expirados. Autentique-se novamente");
         }
 
-        return oldRefreshTokens;
+        return invalidRefreshTokens;
     }
 
     private async Task<(User user, UserRole[] userRoles)> GetUser(Guid userId)

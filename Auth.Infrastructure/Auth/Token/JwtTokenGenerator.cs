@@ -94,13 +94,15 @@ namespace Auth.Infrastructure.Auth.Token
             return refreshToken;
         }
 
-        public bool IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 2)
+        public (bool isTokenExpiringSoon, double differenceInMinutes) IsTokenExpiringSoonOrHasAlreadyExpired(JwtSecurityToken token, int thresholdInMinutes = 0)
         {
             DateTime date = GetDate().AddHours(thresholdTimeZoneInHours); // A data de validade do Token é ToUniversalTime, portanto deliberadamente deve ser adicionado tempo aqui, sempre;
             DateTime dateThreshold = date.AddMinutes(thresholdInMinutes);
-            bool isTokenExpiringSoon = token.ValidTo < dateThreshold;
 
-            return isTokenExpiringSoon;
+            bool isTokenExpiringSoon = token.ValidTo < dateThreshold;
+            double differenceInMinutes = (token.ValidTo - dateThreshold).TotalMinutes;
+
+            return (isTokenExpiringSoon, differenceInMinutes);
         }
 
         private static DateTime GetDate()

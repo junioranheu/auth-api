@@ -25,7 +25,9 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
         {
             JwtSecurityToken jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-            if (_jwtTokenGenerator.IsTokenExpiringSoonOrHasAlreadyExpired(jwtToken))
+            (bool isTokenExpiringSoon, double _) = _jwtTokenGenerator.IsTokenExpiringSoonOrHasAlreadyExpired(jwtToken);
+
+            if (isTokenExpiringSoon)
             {
                 string userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value ?? string.Empty;
 
