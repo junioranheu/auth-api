@@ -1,7 +1,6 @@
 ﻿using Auth.Application.UseCases.Auth.CreateRefreshTokenJWT;
 using Auth.Infrastructure.Auth.Token;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace Auth.API.Middlewares;
 
@@ -25,9 +24,9 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
         {
             JwtSecurityToken jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-            (bool isTokenExpiringSoon, double _) = _jwtTokenGenerator.IsTokenExpiringSoonOrHasAlreadyExpired(jwtToken);
+            (bool isTokenExpiringSoonOrHasAlreadyExpired, double _) = _jwtTokenGenerator.IsTokenExpiringSoonOrHasAlreadyExpired(jwtToken);
 
-            if (isTokenExpiringSoon)
+            if (isTokenExpiringSoonOrHasAlreadyExpired)
             {
                 string userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value ?? string.Empty;
 
@@ -41,12 +40,10 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 ICreateRefreshToken createRefreshToken = scope.ServiceProvider.GetRequiredService<ICreateRefreshToken>();
 
-                (string newJwtToken, string newRefreshToken) = await createRefreshToken.RefreshToken(userId);
+                string newJwtToken = await createRefreshToken.RefreshToken(userId);
 
-                // Update context;
-                context.Response.Headers.Authorization = "Bearer " + newJwtToken;
-                context.Items["JwtToken"] = newJwtToken;
-                context.Items["RefreshToken"] = newRefreshToken;
+                // Atualizar contexto;
+                context.Response.Headers.Authorization = $"Bearer {newJwtToken}";
             }
         }
 

@@ -45,6 +45,9 @@ public sealed class CreateToken(
         // Atualizar token no output;
         output.Token = token;
 
+        // Revogar todos os refresh tokens antigos, caso existam;
+        await _createRefreshToken.Update(userId: output.UserId, mustCheckForValidRefreshTokens: false);
+
         // Salvar o refresh token no banco;
         await _createRefreshToken.Save(refreshToken);
 
