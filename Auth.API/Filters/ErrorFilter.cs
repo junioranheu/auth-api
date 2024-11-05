@@ -19,7 +19,7 @@ public sealed class ErrorFilter(ILogger<ErrorFilter> logger, ICreateLog createLo
         string error = $"Ocorreu um erro ao processar sua requisição. Data: {ObterDetalhesDataHora()}. Caminho: {context.HttpContext.Request.Path}. {(!string.IsNullOrEmpty(ex.InnerException?.Message) ? $"Mais informações: {ex.InnerException.Message}" : $"Mais informações: {ex.Message}")}";
         string errorSimple = !string.IsNullOrEmpty(ex.InnerException?.Message) ? ex.InnerException.Message : ex.Message;
 
-        var detalhes = new BadRequestObjectResult(new
+        var result = new BadRequestObjectResult(new
         {
             Code = StatusCodes.Status500InternalServerError,
             Date = ObterDetalhesDataHora(),
@@ -32,7 +32,7 @@ public sealed class ErrorFilter(ILogger<ErrorFilter> logger, ICreateLog createLo
         await CreateLog(context, error, userId);
         Logger(ex, error);
 
-        context.Result = detalhes;
+        context.Result = result;
         context.ExceptionHandled = true;
     }
 

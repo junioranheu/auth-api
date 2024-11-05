@@ -7,6 +7,8 @@
 		<UserSecretsId>46649de4-eb19-4796-b855-5ccf75608e05</UserSecretsId>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
+	<PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
 	<ItemGroup>
 		<PackageReference Include="junioranheu-utils-package" Version="1.0.20" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">

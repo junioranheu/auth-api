@@ -5,12 +5,15 @@ using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Factory;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json;
+using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.Infrastructure;
 
@@ -34,6 +37,8 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
     }
 
+    private static readonly string[] onChallengeError = ["Acesso negado. Você não tem autorização para acessar este recurso."];
+
     private static void AddAuth(IServiceCollection services, WebApplicationBuilder builder)
     {
         services.AddAuthentication(x =>
@@ -56,6 +61,28 @@ public static class DependencyInjection
                      ValidAudience = builder.Configuration["JwtSettings:Audience"],
                      ValidateLifetime = true,
                      ClockSkew = TimeSpan.Zero
+                 };
+
+                 x.Events = new JwtBearerEvents
+                 {
+                     OnChallenge = context =>
+                     {
+                         context.HandleResponse();
+
+                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                         context.Response.ContentType = "application/json";
+
+                         var result = JsonSerializer.Serialize(new
+                         {
+                             Code = StatusCodes.Status401Unauthorized,
+                             Date = ObterDetalhesDataHora(),
+                             context.HttpContext.Request.Path,
+                             Messages = onChallengeError,
+                             IsError = true
+                         });
+
+                         return context.Response.WriteAsync(result);
+                     }
                  };
              });
     }
@@ -100,9 +127,9 @@ public static class DependencyInjection
             c.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    { jwtSecurityScheme, Array.Empty<string>() }
-                });
+            {
+                { jwtSecurityScheme, Array.Empty<string>() }
+            });
         });
     }
 
