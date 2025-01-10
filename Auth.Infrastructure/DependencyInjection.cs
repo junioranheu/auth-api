@@ -37,7 +37,7 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
     }
 
-    private static readonly string[] onChallengeError = ["Acesso negado. Você não tem autorização para acessar este recurso."];
+    private static readonly string[] onChallengeError = ["Acesso negado. Você não tem autorização para acessar este recurso porque não tem permissão ou não está autenticado."];
 
     private static void AddAuth(IServiceCollection services, WebApplicationBuilder builder)
     {
