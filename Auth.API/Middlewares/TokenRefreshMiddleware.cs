@@ -40,11 +40,19 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 ICreateRefreshToken createRefreshToken = scope.ServiceProvider.GetRequiredService<ICreateRefreshToken>();
 
-                string newJwtToken = await createRefreshToken.RefreshToken(userId);
-
-                // Atualizar contextos;
-                context.Response.Headers.Authorization = $"Bearer {newJwtToken}";
-                context.Request.Headers.Authorization = $"Bearer {newJwtToken}";
+                try
+                {
+                    string newJwtToken = await createRefreshToken.RefreshToken(userId);
+            
+                    // Atualizar contextos;
+                    context.Response.Headers.Authorization = $"Bearer {newJwtToken}";
+                    context.Request.Headers.Authorization = $"Bearer {newJwtToken}";
+                }
+                catch (Exception)
+                {
+                    context.Response.Headers.Authorization = string.Empty;
+                    context.Request.Headers.Authorization = string.Empty;
+                }
             }
         }
 
