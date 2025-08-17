@@ -15,9 +15,9 @@ public sealed class RefreshToken
     [JsonIgnore]
     public User? Users { get; set; }
 
-    public DateTime? Expires { get; set; }
+    public DateTime? ExpiredDate { get; set; }
 
-    public DateTime Created { get; set; } = GerarHorarioBrasilia();
+    public DateTime CreatedDate { get; set; } = GerarHorarioBrasilia();
 
-    public DateTime? Revoked { get; set; }
+    public DateTime? RevokedDate { get; set; }
 }

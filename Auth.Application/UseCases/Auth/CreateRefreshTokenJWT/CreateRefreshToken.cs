@@ -51,7 +51,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
         Where(x => oldRefreshTokenIds.Contains(x.RefreshTokenId)).
         ExecuteUpdateAsync(x => x.
             // SetProperty(prop => prop.Status, false).
-            SetProperty(prop => prop.Revoked, GerarHorarioBrasilia())
+            SetProperty(prop => prop.RevokedDate, GerarHorarioBrasilia())
         );
     }
 
@@ -62,9 +62,9 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
                                               AsNoTracking().
                                               Where(x =>
                                                  x.UserId == userId &&
-                                                 x.Revoked == null
+                                                 x.RevokedDate == null
                                               ).
-                                              OrderByDescending(x => x.Created).
+                                              OrderByDescending(x => x.CreatedDate).
                                               ToListAsync();
 
         // Se mustCheckForValidRefreshTokens for false, significa que deve ser retornado todos os registros, sem validações posteriores;
@@ -74,8 +74,8 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
         }
 
         DateTime date = GerarHorarioBrasilia();
-        List<RefreshToken> validRefreshTokens = [.. oldRefreshTokens.Where(x => x.Expires > date)];
-        List<RefreshToken> invalidRefreshTokens = [.. oldRefreshTokens.Where(x => x.Expires <= date)];
+        List<RefreshToken> validRefreshTokens = [.. oldRefreshTokens.Where(x => x.ExpiredDate > date)];
+        List<RefreshToken> invalidRefreshTokens = [.. oldRefreshTokens.Where(x => x.ExpiredDate <= date)];
 
         if (validRefreshTokens is null || validRefreshTokens.Count == 0)
         {

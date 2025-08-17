@@ -1,11 +1,10 @@
 ﻿using Auth.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using static junioranheu_utils_package.Fixtures.Get;
 
 namespace Auth.Domain.Entities;
 
-public sealed class UserRole
+public sealed class UserRole : Audit
 {
     [Key]
     public Guid UserRoleId { get; set; }
@@ -15,6 +14,4 @@ public sealed class UserRole
     public User? Users { get; set; }
 
     public UserRoleEnum Role { get; set; }
-
-    public DateTime Date { get; set; } = GerarHorarioBrasilia();
 }

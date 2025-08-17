@@ -56,9 +56,7 @@ public sealed class CreateUser(Context context, IMapper map, IGetUserByUserNameO
             VerificationCode = GerarStringAleatoria(17, false),
             VerificationCodeValidity = date.AddDays(7),
             ChangePasswordCode = GerarStringAleatoria(22, false),
-            ChangePasswordCodeValidity = date.AddDays(7),
-            Status = true,
-            Date = date
+            ChangePasswordCodeValidity = date.AddDays(7)
         };
 
         await _context.AddAsync(user);
@@ -72,8 +70,7 @@ public sealed class CreateUser(Context context, IMapper map, IGetUserByUserNameO
         UserRole userRole = new()
         {
             UserId = userId,
-            Role = input.UserRole,
-            Date = GerarHorarioBrasilia()
+            Role = input.UserRole
         };
 
         await _context.AddAsync(userRole);
