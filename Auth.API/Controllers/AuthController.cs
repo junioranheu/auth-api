@@ -22,7 +22,7 @@ namespace Auth.API.Controllers
             }
 
             UserOutput output = await _createToken.Execute(input);
-            return output;
+            return Ok(output);
         }
     }
 }

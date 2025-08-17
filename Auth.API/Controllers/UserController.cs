@@ -16,7 +16,7 @@ namespace Auth.API.Controllers
         public async Task<ActionResult<UserOutput>> Create([FromForm] UserInput input)
         {
             UserOutput output = await _create.Execute(input);
-            return output;
+            return Ok(output);
         }
     }
 }
