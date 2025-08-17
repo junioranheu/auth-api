@@ -78,7 +78,7 @@ namespace Auth.Infrastructure.Auth.Token
                 UserId = userId,
                 Created = GetDate(),
                 Expires = GetDate().AddMinutes(_jwtSettings.RefreshTokenExpiryMinutes),
-                Status = true
+                Revoked = null
             };
 
             return refreshToken;

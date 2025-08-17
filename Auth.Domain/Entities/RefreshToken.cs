@@ -20,6 +20,4 @@ public sealed class RefreshToken
     public DateTime Created { get; set; } = GerarHorarioBrasilia();
 
     public DateTime? Revoked { get; set; }
-
-    public bool Status { get; set; } = true;
 }

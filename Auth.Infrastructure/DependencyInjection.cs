@@ -138,10 +138,14 @@ public static class DependencyInjection
         services.AddCors(x =>
             x.AddPolicy(name: builder.Configuration["CORSSettings:Cors"] ?? string.Empty, builder =>
             {
+                // TO DO: SetIsOriginAllowed((host) => true) + AllowCredentials() é inseguro;
                 builder.AllowAnyHeader().
                         AllowAnyMethod().
                         SetIsOriginAllowed((host) => true).
-                        AllowCredentials();
+                        AllowCredentials().
+
+                        // Expõe o custom header para o front interceptar e atualizar o token;
+                        WithExposedHeaders(SystemConsts.RefreshTokenJWTCustomHeader);
             })
         );
     }

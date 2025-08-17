@@ -45,12 +45,12 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
             return;
         }
 
-        List<Guid> oldRefreshTokenIds = oldRefreshTokens.Select(y => y.RefreshTokenId).ToList();
+        List<Guid> oldRefreshTokenIds = [.. oldRefreshTokens.Select(y => y.RefreshTokenId)];
 
         await _context.RefreshTokens.
         Where(x => oldRefreshTokenIds.Contains(x.RefreshTokenId)).
         ExecuteUpdateAsync(x => x.
-            SetProperty(prop => prop.Status, false).
+            // SetProperty(prop => prop.Status, false).
             SetProperty(prop => prop.Revoked, GerarHorarioBrasilia())
         );
     }
@@ -62,7 +62,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
                                               AsNoTracking().
                                               Where(x =>
                                                  x.UserId == userId &&
-                                                 x.Status == true
+                                                 x.Revoked == null
                                               ).
                                               OrderByDescending(x => x.Created).
                                               ToListAsync();
@@ -74,8 +74,8 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
         }
 
         DateTime date = GerarHorarioBrasilia();
-        List<RefreshToken> validRefreshTokens = oldRefreshTokens.Where(x => x.Expires > date).ToList();
-        List<RefreshToken> invalidRefreshTokens = oldRefreshTokens.Where(x => x.Expires <= date).ToList();
+        List<RefreshToken> validRefreshTokens = [.. oldRefreshTokens.Where(x => x.Expires > date)];
+        List<RefreshToken> invalidRefreshTokens = [.. oldRefreshTokens.Where(x => x.Expires <= date)];
 
         if (validRefreshTokens is null || validRefreshTokens.Count == 0)
         {
@@ -91,12 +91,7 @@ public sealed class CreateRefreshToken(Context context, IJwtTokenGenerator jwtTo
                      Include(x => x.UserRoles).
                      AsNoTracking().
                      Where(x => x.UserId == userId).
-                     FirstOrDefaultAsync();
-
-        if (user is null)
-        {
-            throw new Exception($"Usuário {userId} não encontrado");
-        }
+                     FirstOrDefaultAsync() ?? throw new Exception($"Usuário {userId} não encontrado");
 
         if (!user.Status)
         {

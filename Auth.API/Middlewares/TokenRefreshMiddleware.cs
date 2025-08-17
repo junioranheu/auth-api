@@ -1,4 +1,5 @@
 ﻿using Auth.Application.UseCases.Auth.CreateRefreshTokenJWT;
+using Auth.Domain.Consts;
 using Auth.Infrastructure.Auth.Token;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -43,10 +44,13 @@ public sealed class TokenRefreshMiddleware(RequestDelegate next, IJwtTokenGenera
                 try
                 {
                     string newJwtToken = await createRefreshToken.RefreshToken(userId);
-            
-                    // Atualizar contextos;
+
+                    // Atualizar contextos (para a requisição atual);
                     context.Response.Headers.Authorization = $"Bearer {newJwtToken}";
                     context.Request.Headers.Authorization = $"Bearer {newJwtToken}";
+
+                    // Enviar novo JWT no custom header da resposta para que o front possa interceptar e atualizar o token salvo;
+                    context.Response.Headers.Append(SystemConsts.RefreshTokenJWTCustomHeader, newJwtToken);
                 }
                 catch (Exception)
                 {
