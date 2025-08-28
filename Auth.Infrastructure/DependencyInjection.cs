@@ -1,5 +1,4 @@
-﻿using Auth.Domain.Consts;
-using Auth.Infrastructure.Auth.Models;
+﻿using Auth.Infrastructure.Auth.Models;
 using Auth.Infrastructure.Auth.Token;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Factory;
@@ -10,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json;
 using static junioranheu_utils_package.Fixtures.Get;
@@ -25,8 +23,6 @@ public static class DependencyInjection
         AddAuth(services, builder);
         AddFactory(services);
         AddContext(services, builder);
-        AddSwagger(services);
-        AddCors(services, builder);
 
         return services;
     }
@@ -100,53 +96,5 @@ public static class DependencyInjection
         {
             x.UseMySql(con, ServerVersion.AutoDetect(con));
         });
-    }
-
-    private static void AddSwagger(IServiceCollection services)
-    {
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new() { Title = SystemConsts.Name, Version = "v1" });
-
-            OpenApiSecurityScheme jwtSecurityScheme = new()
-            {
-                Scheme = "bearer",
-                BearerFormat = "JWT",
-                Name = "JWT Authentication",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
-                Description = "Coloque **_apenas_** o token (JWT Bearer) abaixo!",
-
-                Reference = new OpenApiReference
-                {
-                    Id = JwtBearerDefaults.AuthenticationScheme,
-                    Type = ReferenceType.SecurityScheme
-                }
-            };
-
-            c.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                { jwtSecurityScheme, Array.Empty<string>() }
-            });
-        });
-    }
-
-    private static void AddCors(IServiceCollection services, WebApplicationBuilder builder)
-    {
-        services.AddCors(x =>
-            x.AddPolicy(name: builder.Configuration["CORSSettings:Cors"] ?? string.Empty, builder =>
-            {
-                // TO DO: SetIsOriginAllowed((host) => true) + AllowCredentials() é inseguro;
-                builder.AllowAnyHeader().
-                        AllowAnyMethod().
-                        SetIsOriginAllowed((host) => true).
-                        AllowCredentials().
-
-                        // Expõe o custom header para o front interceptar e atualizar o token;
-                        WithExposedHeaders(SystemConsts.RefreshTokenJWTCustomHeader);
-            })
-        );
     }
 }

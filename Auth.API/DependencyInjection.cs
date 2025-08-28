@@ -1,7 +1,9 @@
 ﻿using Auth.API.Filters;
+using Auth.Domain.Consts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using System.IO.Compression;
 using System.Text.Json.Serialization;
 
@@ -9,14 +11,64 @@ namespace Auth.API;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddDependencyInjectionAPI(this IServiceCollection services)
+    public static IServiceCollection AddDependencyInjectionAPI(this IServiceCollection services, WebApplicationBuilder builder)
     {
+        AddSwagger(services);
+        AddCors(services, builder);
         AddKestrel(services);
         AddCompression(services);
         AddControllers(services);
         AddMisc(services);
 
         return services;
+    }
+
+    private static void AddSwagger(IServiceCollection services)
+    {
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new() { Title = SystemConsts.Name, Version = "v1" });
+
+            OpenApiSecurityScheme jwtSecurityScheme = new()
+            {
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Name = "JWT Authentication",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Description = "Coloque **_apenas_** o token (JWT Bearer) abaixo!",
+
+                Reference = new OpenApiReference
+                {
+                    Id = JwtBearerDefaults.AuthenticationScheme,
+                    Type = ReferenceType.SecurityScheme
+                }
+            };
+
+            c.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                { jwtSecurityScheme, Array.Empty<string>() }
+            });
+        });
+    }
+
+    private static void AddCors(IServiceCollection services, WebApplicationBuilder builder)
+    {
+        services.AddCors(x =>
+            x.AddPolicy(name: builder.Configuration["CORSSettings:Cors"] ?? string.Empty, builder =>
+            {
+                // TO DO: SetIsOriginAllowed((host) => true) + AllowCredentials() é inseguro;
+                builder.AllowAnyHeader().
+                        AllowAnyMethod().
+                        SetIsOriginAllowed((host) => true).
+                        AllowCredentials().
+
+                        // Expõe o custom header para o front interceptar e atualizar o token;
+                        WithExposedHeaders(SystemConsts.RefreshTokenJWTCustomHeader);
+            })
+        );
     }
 
     private static void AddKestrel(IServiceCollection services)

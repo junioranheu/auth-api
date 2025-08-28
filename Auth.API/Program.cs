@@ -4,13 +4,13 @@ using Auth.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 {
-    builder.Services.AddDependencyInjectionAPI();
+    builder.Services.AddDependencyInjectionAPI(builder);
     builder.Services.AddDependencyInjectionApplication(builder);
     builder.Services.AddDependencyInjectionInfrastructure(builder);
 }
 
 WebApplication app = builder.Build();
 {
-    app.UseAppConfigurationAsync(builder);
+    app.UseAppConfiguration(builder);
     app.Run();
 }
