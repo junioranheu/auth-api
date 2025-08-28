@@ -2,6 +2,7 @@
 using Auth.Domain.Consts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using System.Diagnostics;
 
 namespace Auth.API;
 
@@ -18,7 +19,8 @@ public static class DependencyAppConfiguration
         AddCors(app, builder);
         AddCompression(app);
         AddAuth(app);
-        AddMisc(app);
+        AddObservability(app);
+        AddCaching(app);
 
         return app;
     }
@@ -101,7 +103,41 @@ public static class DependencyAppConfiguration
         app.MapControllers();
     }
 
-    private static void AddMisc(WebApplication app)
+    private static void AddObservability(WebApplication app)
+    {
+        ActivitySource activitySource = new(SystemConsts.Name);
+
+        ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+        ActivityListener listener = new()
+        {
+            ShouldListenTo = source => source.Name == "Microsoft.AspNetCore" || source.Name == SystemConsts.Name,
+            Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                // Filtra métodos irrelevantes;
+                string? method = activity.Tags.FirstOrDefault(t => t.Key == "http.request.method").Value?.ToString();
+                string? path = activity.Tags.FirstOrDefault(t => t.Key == "http.route").Value?.ToString();
+
+                if (method == "OPTIONS" || string.IsNullOrEmpty(path) || path.Contains("favicon") || path.Contains("health"))
+                {
+                    return;
+                }
+
+                string? statusCodeStr = activity.GetTagItem("http.response.status_code")?.ToString();
+
+                logger.LogInformation("[Observability] {Tags}, [duration, {Duration}ms], [status, {Status}]",
+                    string.Join(", ", activity.Tags.Where(x => x.Key.StartsWith("http") || x.Key == "server.address")),
+                    activity.Duration.TotalMilliseconds,
+                    statusCodeStr
+                );
+            }
+        };
+
+        ActivitySource.AddActivityListener(listener);
+    }
+
+    private static void AddCaching(WebApplication app)
     {
         app.UseResponseCaching();
     }

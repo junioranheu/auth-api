@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.IO.Compression;
 using System.Text.Json.Serialization;
 
@@ -13,12 +15,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDependencyInjectionAPI(this IServiceCollection services, WebApplicationBuilder builder)
     {
+        IWebHostEnvironment env = builder.Environment;
+
         AddSwagger(services);
         AddCors(services, builder);
         AddKestrel(services);
         AddCompression(services);
-        AddControllers(services);
-        AddMisc(services);
+        AddControllers(services, env);
+        AddObservability(services);
+        AddCaching(services);
 
         return services;
     }
@@ -99,7 +104,7 @@ public static class DependencyInjection
         });
     }
 
-    private static void AddControllers(IServiceCollection services)
+    private static void AddControllers(IServiceCollection services, IWebHostEnvironment env)
     {
         services.AddControllers(x =>
         {
@@ -109,16 +114,24 @@ public static class DependencyInjection
             {
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-
-#if DEBUG
-                x.JsonSerializerOptions.WriteIndented = true;
-#else
-                x.JsonSerializerOptions.WriteIndented = false;
-#endif
+                x.JsonSerializerOptions.WriteIndented = env.IsDevelopment();
             });
     }
 
-    private static void AddMisc(IServiceCollection services)
+    private static void AddObservability(IServiceCollection services)
+    {
+        /// Foi necessário instalar estas seguintes dependências:
+        /// OpenTelemetry;
+        /// OpenTelemetry.Extensions.Hosting;
+        /// OpenTelemetry.Instrumentation.AspNetCore;
+        services.AddOpenTelemetry().
+            ConfigureResource(resource => resource.AddService(SystemConsts.Name)).
+            WithTracing(tracing => tracing.
+                AddAspNetCoreInstrumentation()
+            );
+    }
+
+    private static void AddCaching(IServiceCollection services)
     {
         services.AddMemoryCache();
         services.AddResponseCaching();
